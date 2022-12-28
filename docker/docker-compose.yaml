@@ -1,0 +1,44 @@
+version: '3'
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:12
+    volumes:
+      - ./file.csv:/docker-entrypoint-initdb.d/file.csv
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=pgpassword
+      - POSTGRES_DB=orthanc
+    restart: always
+    ports:
+      - "90:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  orthanc:
+    container_name: orthanc
+    image: jodogne/orthanc-plugins:1.11.0
+    volumes:
+      - ./orthanc.json:/etc/orthanc/orthanc.json:ro 
+      - ./datapath/:/home/user/DICOM
+    ports:
+      - 4242:4242
+      - 8042:8042
+    environment:
+      ORTHANC_POSTGRESQL_USERNAME: postgres
+      ORTHANC_POSTGRESQL_PASSWORD: pgpassword
+      ORTHANC_POSTGRESQL_DB_NAME: orthanc
+    restart: always
+    depends_on:
+      - postgres
+
+networks:
+  host_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 127.0.0.0/8
