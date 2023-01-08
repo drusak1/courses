@@ -1,0 +1,1 @@
+решение курса https://karpov.courses/systemdesign
